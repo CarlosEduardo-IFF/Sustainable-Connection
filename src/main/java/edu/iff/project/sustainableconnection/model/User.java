@@ -15,15 +15,15 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-@Table(name = "user")
+@Table(name = "users")
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    
     private String name;
     private String email;
     private String password;    
-    // private UserRole role;
     
     public User(String name, String email, String password) {
         this.name = name;
@@ -31,11 +31,5 @@ public class User {
         this.password = password;
     }
 
-    
-    // @Override
-    // public Collection<? extends GrantedAuthority> getAuthorities() {
-    //     if(this.role == UserRole.ADMIN) return List.of(new SimpleGrantedAuthority("ROLE_ADMIN"), new SimpleGrantedAuthority("ROLE_USER"));
-    //     else return List.of(new SimpleGrantedAuthority("ROLE_USER"));
-    // }
 }
 
