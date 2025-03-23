@@ -1,11 +1,10 @@
 package edu.iff.project.sustainableconnection.repository;
 
+import edu.iff.project.sustainableconnection.model.RedemptionRecord;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import edu.iff.project.sustainableconnection.model.User;
-
 @Repository
-public interface RedemptionRecordRepository extends JpaRepository<User, Long> {
-
+public interface RedemptionRecordRepository extends JpaRepository<RedemptionRecord, Long> {
+	
 }
