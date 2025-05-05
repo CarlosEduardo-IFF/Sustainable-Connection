@@ -48,11 +48,11 @@ public class SecurityConfigurations {
                             "/swagger-ui/**",
                             "/swagger-ui.html"
                         ).permitAll()
-                        .requestMatchers(HttpMethod.POST, "/addresses").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/discarded-item-categories").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/addresses").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/discarded-item-categories").permitAll()
                         .requestMatchers(HttpMethod.POST, "/discarded-items").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/drop-off-points").hasRole("ADMIN")
-                        //.requestMatchers(HttpMethod.POST, "/reward-items").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/drop-off-points").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/reward-items").permitAll()
                         
                         .requestMatchers(HttpMethod.DELETE, "/addresses").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/discarded-item-categories").hasRole("ADMIN")
