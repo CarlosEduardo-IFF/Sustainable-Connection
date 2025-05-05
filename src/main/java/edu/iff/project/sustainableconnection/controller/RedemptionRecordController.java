@@ -1,14 +1,15 @@
 package edu.iff.project.sustainableconnection.controller;
 
+import edu.iff.project.sustainableconnection.DTO.RedemptionRecordCreateDTO;
+import edu.iff.project.sustainableconnection.DTO.RedemptionRecordDTOResponse;
+import edu.iff.project.sustainableconnection.DTO.RedemptionRecordUpdateDTO;
 import edu.iff.project.sustainableconnection.model.RedemptionRecord;
 import edu.iff.project.sustainableconnection.service.RedemptionRecordService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/redemptions")
@@ -17,46 +18,49 @@ public class RedemptionRecordController {
     @Autowired
     private RedemptionRecordService redemptionRecordService;
 
-    @GetMapping("/getAll")
+    @GetMapping
     public ResponseEntity<List<RedemptionRecord>> getAll() {
         List<RedemptionRecord> records = redemptionRecordService.findAll();
         return ResponseEntity.ok(records);
     }
 
-    @GetMapping("/get/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<RedemptionRecord> getById(@PathVariable Long id) {
-        Optional<RedemptionRecord> record = redemptionRecordService.findById(id);
-        return record.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+        return redemptionRecordService.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping("/post")
-    public ResponseEntity<RedemptionRecord> create(@RequestParam Long userId, @RequestParam Long rewardItemId) {
+    @PostMapping
+    public ResponseEntity<RedemptionRecord> create(@RequestBody RedemptionRecordCreateDTO body) {
         try {
-            RedemptionRecord savedRecord = redemptionRecordService.save(userId, rewardItemId);
-            return ResponseEntity.ok(savedRecord);
+            RedemptionRecord saved = redemptionRecordService.save(body.email(), body.rewardItemId());
+            return ResponseEntity.ok(saved);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(null);
+            return ResponseEntity.badRequest().build();
         }
     }
 
-    @PutMapping("/put/{id}")
-    public ResponseEntity<RedemptionRecord> update(
-            @PathVariable Long id, 
-            @RequestParam Long userId, 
-            @RequestParam Long rewardItemId, 
-            @RequestParam LocalDateTime redemptionDate) {
-
+    @PutMapping("/{id}")
+    public ResponseEntity<RedemptionRecord> update(@PathVariable Long id, @RequestBody RedemptionRecordUpdateDTO body) {
         try {
-            RedemptionRecord updatedRecord = redemptionRecordService.update(id, userId, rewardItemId, redemptionDate);
-            return (updatedRecord != null) ? ResponseEntity.ok(updatedRecord) : ResponseEntity.notFound().build();
+            RedemptionRecord updated = redemptionRecordService.update(
+                id, body.userId(), body.rewardItemId(), body.redemptionDate()
+            );
+            return (updated != null) ? ResponseEntity.ok(updated) : ResponseEntity.notFound().build();
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(null);
+            return ResponseEntity.badRequest().build();
         }
     }
 
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         boolean deleted = redemptionRecordService.delete(id);
         return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/by-user-email")
+    public List<RedemptionRecordDTOResponse> getRedemptionsByUserEmail(@RequestParam String email) {
+        return redemptionRecordService.getRecordsByUserEmail(email);
     }
 }

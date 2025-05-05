@@ -24,26 +24,27 @@ public class AddressService {
         return addressRepository.findById(id);
     }
 
-    public Address save(String street, String city, String state, String zipCode) {
+    public Address save(String street, String city, String state, String zipCode, Double latitude, Double longitude) {
 
-        Address address = new Address(street, city, state, zipCode);
+        Address address = new Address(street, city, state, zipCode, latitude, longitude);
         return addressRepository.save(address);
     }
 
-    public Optional<Address> update(Long id, String street, String city, String state, String zipCode) {
+    public Address update(Long id, String street, String city, String state, String zipCode, Double latitude,
+                      Double longitude) 
+                      {
 
-        Optional<Address> existingAddress = addressRepository.findById(id);
+                        Address address = addressRepository.findById(id)
+                            .orElseThrow(() -> new RuntimeException("Endereço não encontrado."));
 
-        if (existingAddress.isPresent()) {
-            Address address = existingAddress.get();
-            address.setStreet(street);
-            address.setCity(city);
-            address.setState(state);
-            address.setZipCode(zipCode);
-            return Optional.of(addressRepository.save(address));
-        }
+                        address.setStreet(street);
+                        address.setCity(city);
+                        address.setState(state);
+                        address.setZipCode(zipCode);
+                        address.setLatitude(latitude);
+                        address.setLongitude(longitude);
 
-        return Optional.empty();
+        return addressRepository.save(address);
     }
 
     public boolean delete(Long id) {

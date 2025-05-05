@@ -15,8 +15,8 @@ public class DropOffPoint {
     private String name;
     private String description;
 
-    @JsonIgnore
-    @OneToOne
+    //@JsonIgnore
+    @OneToOne(cascade = CascadeType.REMOVE, orphanRemoval = true)
     private Address address;
 
     public DropOffPoint() {}

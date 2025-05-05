@@ -1,5 +1,7 @@
 package edu.iff.project.sustainableconnection.controller;
 
+import edu.iff.project.sustainableconnection.DTO.DiscardedItemDTO;
+import edu.iff.project.sustainableconnection.DTO.DiscardedItemDTOResponse;
 import edu.iff.project.sustainableconnection.model.DiscardedItem;
 import edu.iff.project.sustainableconnection.service.DiscardedItemService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,7 +9,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/discarded-items")
@@ -16,44 +17,56 @@ public class DiscardedItemController {
     @Autowired
     private DiscardedItemService discardedItemService;
 
-    @GetMapping("/getAll")
+    @GetMapping
     public ResponseEntity<List<DiscardedItem>> getAll() {
         List<DiscardedItem> discardedItems = discardedItemService.findAll();
         return ResponseEntity.ok(discardedItems);
     }
 
-    @GetMapping("/get/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<DiscardedItem> getById(@PathVariable Long id) {
-        Optional<DiscardedItem> discardedItem = discardedItemService.findById(id);
-        return discardedItem.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+        return discardedItemService.findById(id)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @PostMapping("/post")
-    public ResponseEntity<DiscardedItem> create(@RequestParam Long userId, @RequestParam Long dropOffPointId, 
-                                                 @RequestParam Long categoryId, @RequestParam int pointsEarned) {
+    @PostMapping
+    public ResponseEntity<DiscardedItem> create(@RequestBody DiscardedItemDTO body) {
         try {
-            DiscardedItem savedDiscardedItem = discardedItemService.save(userId, dropOffPointId, categoryId, pointsEarned);
-            return ResponseEntity.ok(savedDiscardedItem);
+            DiscardedItem saved = discardedItemService.save(
+                body.email(), body.dropOffPointId(), body.categoryId()
+            );
+            return ResponseEntity.ok(saved);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(null);
+            return ResponseEntity.badRequest().build();
         }
     }
 
-    @PutMapping("/put/{id}")
-    public ResponseEntity<DiscardedItem> update(@PathVariable Long id, @RequestParam Long userId, 
-                                                 @RequestParam Long dropOffPointId, @RequestParam Long categoryId, 
-                                                 @RequestParam int pointsEarned) {
-        try {
-            DiscardedItem updatedDiscardedItem = discardedItemService.update(id, userId, dropOffPointId, categoryId, pointsEarned);
-            return (updatedDiscardedItem != null) ? ResponseEntity.ok(updatedDiscardedItem) : ResponseEntity.notFound().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(null);
-        }
-    }
-
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         boolean deleted = discardedItemService.delete(id);
         return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/by-client")
+    public ResponseEntity<List<DiscardedItemDTOResponse>> getByClientEmail(@RequestParam String email) {
+        try {
+            List<DiscardedItem> items = discardedItemService.findByClientEmail(email);
+
+            List<DiscardedItemDTOResponse> dtoList = items.stream().map(item ->
+                new DiscardedItemDTOResponse(
+                    item.getId(),
+                    item.getDiscardDate().toLocalDate().toString(),
+                    item.getCategory().getName(),
+                    item.getDropOffPoint().getName(),
+                    item.getDropOffPoint().getDescription(),
+                    item.getPointsEarned()
+                )
+            ).toList();
+
+            return ResponseEntity.ok(dtoList);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 }

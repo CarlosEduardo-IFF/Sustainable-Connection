@@ -1,12 +1,13 @@
 package edu.iff.project.sustainableconnection.service;
 
+import edu.iff.project.sustainableconnection.model.Client;
 import edu.iff.project.sustainableconnection.model.DiscardedItem;
-import edu.iff.project.sustainableconnection.model.User;
 import edu.iff.project.sustainableconnection.model.DropOffPoint;
+import edu.iff.project.sustainableconnection.model.User;
 import edu.iff.project.sustainableconnection.model.DiscardedItemCategory;
 import edu.iff.project.sustainableconnection.repository.DiscardedItemRepository;
-import edu.iff.project.sustainableconnection.repository.UserRepository;
 import edu.iff.project.sustainableconnection.repository.DropOffPointRepository;
+import edu.iff.project.sustainableconnection.repository.ClientRepository;
 import edu.iff.project.sustainableconnection.repository.DiscardedItemCategoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,7 +23,7 @@ public class DiscardedItemService {
     private DiscardedItemRepository discardedItemRepository;
 
     @Autowired
-    private UserRepository userRepository;
+    private ClientRepository userRepository;
 
     @Autowired
     private DropOffPointRepository dropOffPointRepository;
@@ -38,34 +39,25 @@ public class DiscardedItemService {
         return discardedItemRepository.findById(id);
     }
 
-    public DiscardedItem save(Long userId, Long dropOffPointId, Long categoryId, int pointsEarned) {
-        Optional<User> userOpt = userRepository.findById(userId);
-        Optional<DropOffPoint> dropOffPointOpt = dropOffPointRepository.findById(dropOffPointId);
-        Optional<DiscardedItemCategory> categoryOpt = discardedItemCategoryRepository.findById(categoryId);
-
-        if (userOpt.isEmpty() || dropOffPointOpt.isEmpty() || categoryOpt.isEmpty()) {
-            throw new RuntimeException("Invalid ID(s) provided.");
-        }
-
-        DiscardedItem discardedItem = new DiscardedItem(userOpt.get(), dropOffPointOpt.get(), LocalDateTime.now(), pointsEarned, categoryOpt.get());
-        return discardedItemRepository.save(discardedItem);
-    }
-
-    public DiscardedItem update(Long id, Long userId, Long dropOffPointId, Long categoryId, int pointsEarned) {
-        if (!discardedItemRepository.existsById(id)) {
-            return null;
-        }
-
-        Optional<User> userOpt = userRepository.findById(userId);
-        Optional<DropOffPoint> dropOffPointOpt = dropOffPointRepository.findById(dropOffPointId);
-        Optional<DiscardedItemCategory> categoryOpt = discardedItemCategoryRepository.findById(categoryId);
-
-        if (userOpt.isEmpty() || dropOffPointOpt.isEmpty() || categoryOpt.isEmpty()) {
-            throw new RuntimeException("Invalid ID(s) provided.");
-        }
-
-        DiscardedItem discardedItem = new DiscardedItem(userOpt.get(), dropOffPointOpt.get(), LocalDateTime.now(), pointsEarned, categoryOpt.get());
-        discardedItem.setId(id);
+    public DiscardedItem save(String email, Long dropOffPointId, Long categoryId) {
+        Client client = userRepository.findByEmail(email)
+            .orElseThrow(() -> new IllegalArgumentException("Client not found."));
+    
+        DropOffPoint dropOffPoint = dropOffPointRepository.findById(dropOffPointId)
+            .orElseThrow(() -> new IllegalArgumentException("Drop-off point ID not found."));
+    
+        DiscardedItemCategory category = discardedItemCategoryRepository.findById(categoryId)
+            .orElseThrow(() -> new IllegalArgumentException("Category ID not found."));
+    
+        int points = category.getPointsPerItens();
+        client.setPoints(client.getPoints() + points);
+        client.setCredits(client.getCredits() + points);
+        userRepository.save(client);
+    
+        DiscardedItem discardedItem = new DiscardedItem(
+            client, dropOffPoint, LocalDateTime.now(), points, category
+        );
+    
         return discardedItemRepository.save(discardedItem);
     }
 
@@ -75,6 +67,14 @@ public class DiscardedItemService {
             return true;
         }
         return false;
+    }
+
+    public List<DiscardedItem> findByClientEmail(String email) {
+        User client = userRepository.findByEmail(email)
+            .orElseThrow(() -> new IllegalArgumentException("Client not found."));
+        
+        Long idUser = client.getId();
+        return discardedItemRepository.findByUserId(idUser);
     }
 }
 
