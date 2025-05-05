@@ -78,10 +78,10 @@ public class SecurityConfigurations {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration configuration = new CorsConfiguration();
-    configuration.setAllowedOrigins(List.of("*")); // Permite tudo
+    configuration.setAllowedOrigins(List.of("https://front-project-production-c51f.up.railway.app")); // Origem específica
     configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
     configuration.setAllowedHeaders(List.of("*"));
-    configuration.setAllowCredentials(false); // Tem que ser false com "*"
+    configuration.setAllowCredentials(true); // Agora pode ser true com origem específica
 
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
     source.registerCorsConfiguration("/**", configuration);
